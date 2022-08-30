@@ -1,45 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class Mech : MonoBehaviour
 {
-    [SerializeField] float speed = 1.0f;
-    [SerializeField] float rotationSpeed = 100.0f;
+    protected float accelerationForce = .3f;
+    protected float accelerationTorque = 50.3f;
+    private float maxVelocity = 1.0f;
+    private float maxRotationVelocity = 30.0f;
 
-    public TMP_Text hpTextCanvas;
+    protected Rigidbody2D mechRB;
+
     // Start is called before the first frame update
-    void Start()
+    protected void Start()
     {
+        mechRB = GetComponent<Rigidbody2D>();
     }
 
-    void UpdateHP() {
-        MechModule[] modules = GetComponentsInChildren<MechModule>();
-        float sumHP = 0;
-        foreach (MechModule module in modules) {
-            sumHP += module.healthPoints;
-        }
-        hpTextCanvas.text = "HP: " + sumHP;
-    }
-    public void ChangeCall(GameObject gameObject) {
-        UpdateHP();
+    protected void AddMoveForce(Vector3 move) {
+        mechRB.AddForce(move.normalized * accelerationForce, ForceMode2D.Impulse);
+        mechRB.velocity = mechRB.velocity.normalized * (mechRB.velocity.magnitude < maxVelocity ? mechRB.velocity.magnitude : maxVelocity);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        Vector3 moveVector = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
-        moveVector = moveVector.normalized * speed;
-        transform.position += moveVector * Time.deltaTime * speed;
-
-        float rotate = 0;
-        if (Input.GetKey(KeyCode.Q)) {
-            rotate -= 1;
-        }
-        if (Input.GetKey(KeyCode.E)) {
-            rotate += 1;
-        }
-        transform.Rotate(new Vector3(0, 0, rotate * rotationSpeed * Time.deltaTime));
+    protected void AddAngularForce(float rotate) {
+        mechRB.AddTorque(rotate * Time.deltaTime * accelerationTorque, ForceMode2D.Force);
+        mechRB.angularVelocity = mechRB.angularVelocity < maxRotationVelocity ?  mechRB.angularVelocity : maxRotationVelocity;
     }
+    public virtual void ChangeCall() {
+        // todo: may be do smth? or not virtual
+    }
+
+
 }
